@@ -21,7 +21,7 @@ from fontTools.varLib import instancer
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets"
-CACHE = Path(__file__).resolve().parent / ".fontcache"
+CACHE = Path(__file__).resolve().parent / ".cache"
 
 # Palette taken from usetalky.com
 INK = "#101938"
@@ -224,6 +224,86 @@ def hero():
     save(s, "hero.svg", "Hi, I'm Isaac Teres Espallargas. Mathematician by training. Data scientist by trade.")
 
 
+# Logos: coloured devicon originals, simple-icons for the ones devicon lacks,
+# and a drawn tile for the rest.
+DEVICON = "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/{0}/{0}-original.svg"
+SIMPLE = "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/{0}.svg"
+
+TOOLS = [
+    ("Languages", [("Python", "dev:python"), ("SQL", "text:SQL:#4479A1"), ("Java", "dev:java"),
+                   ("C++", "dev:cplusplus"), ("C#", "dev:csharp"), ("R", "dev:r"), ("MATLAB", "dev:matlab")]),
+    ("ML & GenAI", [("scikit-learn", "dev:scikitlearn"), ("XGBoost", "text:XGB:#189FDD"),
+                    ("Hugging Face", "si:huggingface:FFD21E"), ("LangChain", "si:langchain:1C3C3C"),
+                    ("Ollama", "si:ollama:000000"), ("OpenCV", "dev:opencv"), ("NumPy", "dev:numpy")]),
+    ("Data", [("dbt", "text:dbt:#FF694B"), ("Airflow", "dev:apacheairflow"), ("Databricks", "si:databricks:FF3621"),
+              ("ChromaDB", "chroma"), ("Jupyter", "dev:jupyter")]),
+    ("Cloud", [("Azure", "dev:azure"), ("Google Cloud", "dev:googlecloud"),
+               ("AWS", "url:https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg")]),
+    ("DevOps", [("Docker", "dev:docker"), ("Terraform", "dev:terraform"), ("Git", "dev:git"),
+                ("GitHub Actions", "dev:githubactions"), ("Bitbucket", "dev:bitbucket"), ("SonarQube", "dev:sonarqube")]),
+    ("Frameworks", [("Flask", "dev:flask"), ("Spring Boot", "dev:spring"), ("JUnit", "dev:junit"),
+                            ("LaTeX", "dev:latex"), ("Linux", "url:https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-plain.svg")]),
+]
+
+
+def logo_data(spec):
+    """Base64 data URI for a logo spec, downloaded once into the cache."""
+    kind, _, rest = spec.partition(":")
+    if kind == "dev":
+        url, fill = DEVICON.format(rest), None
+    elif kind == "si":
+        name, fill = rest.split(":")
+        url = SIMPLE.format(name)
+    else:
+        url, fill = rest, None
+    path = CACHE / "logos" / (re.sub(r"[^a-z0-9]+", "-", url.lower())[-80:] + ".svg")
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(_fetch(url))
+    svg = path.read_text(encoding="utf-8")
+    if fill:
+        svg = svg.replace("<svg ", f'<svg fill="#{fill}" ', 1)
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+
+def logo_tile(s, x, y, spec, size=56):
+    s.rect(x, y, size, size, r=13, fill=WHITE, stroke=LINE)
+    c, l = x + size / 2, 30
+    if spec.startswith("text:"):
+        _, label, color = spec.split(":")
+        fam, wt, fs = ("outfit", 500, 19) if label == "dbt" else ("mono", 500, 13)
+        s.text(c, y + size / 2 + fs * 0.35, label, fam, wt, fs, color, anchor="middle")
+    elif spec == "chroma":
+        for dx, color in [(-6, "#FFDE2D"), (0, "#FF6446"), (6, "#327EFF")]:
+            s.add(f'<circle cx="{c + dx}" cy="{y + size / 2}" r="9" fill="{color}" opacity="0.85"/>')
+    else:
+        s.add(f'<image x="{c - l / 2}" y="{y + (size - l) / 2}" width="{l}" height="{l}" href="{logo_data(spec)}"/>')
+
+
+def tools():
+    pad, label_w, cell = 36, 230, 82
+    row_h = 112
+    h = 130 + len(TOOLS) * row_h + 24
+    s = Svg(W, h)
+    s.rect(0, 0, W, h, r=22, fill=WHITE)
+    s.text(pad, 66, "Tools I work with.", "outfit", 500, 30, INK, tracking=-0.03)
+    total = sum(len(t) for _, t in TOOLS)
+    s.add(f'<circle cx="{pad + 3}" cy="{92}" r="3" fill="{ORANGE}"/>')
+    s.text(pad + 14, 96, f"{total} tools · languages, ML, data, cloud and DevOps", "mono", 400, 11, GREY)
+    y = 124
+    for i, (group, items) in enumerate(TOOLS):
+        s.rect(pad, y, W - 2 * pad, 1, fill=LINE)
+        s.text(pad, y + 36, f"0{i + 1}", "mono", 500, 12, ORANGE)
+        s.text(pad + 40, y + 40, group, "outfit", 300, 23, INK, tracking=-0.01)
+        for j, (name, spec) in enumerate(items):
+            cx = pad + label_w + j * cell
+            logo_tile(s, cx + (cell - 56) / 2, y + 16, spec)
+            s.text(cx + cell / 2, y + 90, name, "manrope", 500, 10.5, GREY, anchor="middle")
+        y += row_h
+    s.rect(pad, y, W - 2 * pad, 1, fill=LINE)
+    save(s, "tools.svg", "Tools I work with: " + ", ".join(n for _, t in TOOLS for n, _ in t) + ".")
+
+
 PROJECTS = [
     ("SQL-Query-Agent", "REPO·01", "Plain-English queries over a dbt warehouse.", ["dbt", "Ollama", "ChromaDB"]),
     ("Distributed-ML-Server", "REPO·02", "Train and serve ML models, client–server.", ["Java", "Python"]),
@@ -275,6 +355,7 @@ def cta():
 
 if __name__ == "__main__":
     hero()
+    tools()
     for p in PROJECTS:
         project(*p, slug=p[0].lower().replace("_", "-"))
     cta()

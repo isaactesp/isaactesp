@@ -4,6 +4,10 @@
 
 <br/><br/>
 
+<img src="assets/tools.svg" width="100%" alt="Tools I work with: Python, SQL, Java, C++, C#, R, MATLAB, scikit-learn, XGBoost, Hugging Face, LangChain, Ollama, OpenCV, NumPy, dbt, Airflow, Databricks, ChromaDB, Jupyter, Azure, Google Cloud, AWS, Docker, Terraform, Git, GitHub Actions, Bitbucket, SonarQube, Flask, Spring Boot, JUnit, LaTeX and Linux." />
+
+<br/><br/>
+
 <p>
   <a href="https://github.com/isaactesp/SQL-Query-Agent"><img src="assets/project-sql-query-agent.svg" width="49%" alt="SQL-Query-Agent: plain-English queries over a dbt warehouse." /></a>
   <a href="https://github.com/isaactesp/Distributed-ML-Server"><img src="assets/project-distributed-ml-server.svg" width="49%" alt="Distributed-ML-Server: train and serve ML models, client–server." /></a>
