@@ -164,7 +164,7 @@ class Svg:
 
 
 def save(svg, name, title):
-    OUT.mkdir(exist_ok=True)
+    (OUT / name).parent.mkdir(parents=True, exist_ok=True)
     (OUT / name).write_text(svg.render(title), encoding="utf-8")
     print(f"assets/{name}  {(OUT / name).stat().st_size / 1024:.0f} KB")
 
@@ -229,20 +229,56 @@ def hero():
 DEVICON = "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/{0}/{0}-original.svg"
 SIMPLE = "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/{0}.svg"
 
+LINUX = "url:https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-plain.svg"
+AWS = "url:https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg"
+
+# (group, [(name, logo spec, link)])
 TOOLS = [
-    ("Languages", [("Python", "dev:python"), ("SQL", "text:SQL:#4479A1"), ("Java", "dev:java"),
-                   ("C++", "dev:cplusplus"), ("C#", "dev:csharp"), ("R", "dev:r"), ("MATLAB", "dev:matlab")]),
-    ("ML & GenAI", [("scikit-learn", "dev:scikitlearn"), ("XGBoost", "text:XGB:#189FDD"),
-                    ("Hugging Face", "si:huggingface:FFD21E"), ("LangChain", "si:langchain:1C3C3C"),
-                    ("Ollama", "si:ollama:000000"), ("OpenCV", "dev:opencv"), ("NumPy", "dev:numpy")]),
-    ("Data", [("dbt", "text:dbt:#FF694B"), ("Airflow", "dev:apacheairflow"), ("Databricks", "si:databricks:FF3621"),
-              ("ChromaDB", "chroma"), ("Jupyter", "dev:jupyter")]),
-    ("Cloud", [("Azure", "dev:azure"), ("Google Cloud", "dev:googlecloud"),
-               ("AWS", "url:https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg")]),
-    ("DevOps", [("Docker", "dev:docker"), ("Terraform", "dev:terraform"), ("Git", "dev:git"),
-                ("GitHub Actions", "dev:githubactions"), ("Bitbucket", "dev:bitbucket"), ("SonarQube", "dev:sonarqube")]),
-    ("Frameworks", [("Flask", "dev:flask"), ("Spring Boot", "dev:spring"), ("JUnit", "dev:junit"),
-                            ("LaTeX", "dev:latex"), ("Linux", "url:https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-plain.svg")]),
+    ("Languages", [
+        ("Python", "dev:python", "https://www.python.org"),
+        ("SQL", "text:SQL:#4479A1", "https://en.wikipedia.org/wiki/SQL"),
+        ("Java", "dev:java", "https://dev.java"),
+        ("C++", "dev:cplusplus", "https://isocpp.org"),
+        ("C#", "dev:csharp", "https://learn.microsoft.com/dotnet/csharp/"),
+        ("R", "dev:r", "https://www.r-project.org"),
+        ("MATLAB", "dev:matlab", "https://www.mathworks.com/products/matlab.html"),
+    ]),
+    ("ML & GenAI", [
+        ("scikit-learn", "dev:scikitlearn", "https://scikit-learn.org"),
+        ("XGBoost", "text:XGB:#189FDD", "https://xgboost.ai"),
+        ("Hugging Face", "si:huggingface:FFD21E", "https://huggingface.co"),
+        ("LangChain", "si:langchain:1C3C3C", "https://www.langchain.com"),
+        ("Ollama", "si:ollama:000000", "https://ollama.com"),
+        ("OpenCV", "dev:opencv", "https://opencv.org"),
+        ("NumPy", "dev:numpy", "https://numpy.org"),
+    ]),
+    ("Data", [
+        ("dbt", "text:dbt:#FF694B", "https://www.getdbt.com"),
+        ("Airflow", "dev:apacheairflow", "https://airflow.apache.org"),
+        ("Databricks", "si:databricks:FF3621", "https://www.databricks.com"),
+        ("ChromaDB", "chroma", "https://www.trychroma.com"),
+        ("Jupyter", "dev:jupyter", "https://jupyter.org"),
+    ]),
+    ("Cloud", [
+        ("Azure", "dev:azure", "https://azure.microsoft.com"),
+        ("Google Cloud", "dev:googlecloud", "https://cloud.google.com"),
+        ("AWS", AWS, "https://aws.amazon.com"),
+    ]),
+    ("DevOps", [
+        ("Docker", "dev:docker", "https://www.docker.com"),
+        ("Terraform", "dev:terraform", "https://www.terraform.io"),
+        ("Git", "dev:git", "https://git-scm.com"),
+        ("GitHub Actions", "dev:githubactions", "https://github.com/features/actions"),
+        ("Bitbucket", "dev:bitbucket", "https://bitbucket.org"),
+        ("SonarQube", "dev:sonarqube", "https://www.sonarsource.com/products/sonarqube/"),
+    ]),
+    ("Frameworks", [
+        ("Flask", "dev:flask", "https://flask.palletsprojects.com"),
+        ("Spring Boot", "dev:spring", "https://spring.io/projects/spring-boot"),
+        ("JUnit", "dev:junit", "https://junit.org"),
+        ("LaTeX", "dev:latex", "https://www.latex-project.org"),
+        ("Linux", LINUX, "https://www.kernel.org"),
+    ]),
 ]
 
 
@@ -266,42 +302,63 @@ def logo_data(spec):
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
-def logo_tile(s, x, y, spec, size=56):
-    s.rect(x, y, size, size, r=13, fill=WHITE, stroke=LINE)
-    c, l = x + size / 2, 30
+def draw_logo(s, c, cy, spec, l=34):
     if spec.startswith("text:"):
         _, label, color = spec.split(":")
-        fam, wt, fs = ("outfit", 500, 19) if label == "dbt" else ("mono", 500, 13)
-        s.text(c, y + size / 2 + fs * 0.35, label, fam, wt, fs, color, anchor="middle")
+        fam, wt, fs = ("outfit", 500, 22) if label == "dbt" else ("mono", 500, 15)
+        s.text(c, cy + fs * 0.35, label, fam, wt, fs, color, anchor="middle")
     elif spec == "chroma":
-        for dx, color in [(-6, "#FFDE2D"), (0, "#FF6446"), (6, "#327EFF")]:
-            s.add(f'<circle cx="{c + dx}" cy="{y + size / 2}" r="9" fill="{color}" opacity="0.85"/>')
+        for dx, color in [(-7, "#FFDE2D"), (0, "#FF6446"), (7, "#327EFF")]:
+            s.add(f'<circle cx="{c + dx}" cy="{cy}" r="10" fill="{color}" opacity="0.85"/>')
     else:
-        s.add(f'<image x="{c - l / 2}" y="{y + (size - l) / 2}" width="{l}" height="{l}" href="{logo_data(spec)}"/>')
+        s.add(f'<image x="{c - l / 2}" y="{cy - l / 2}" width="{l}" height="{l}" href="{logo_data(spec)}"/>')
+
+
+TILE_W, TILE_H, LABEL_W = 84, 92, 150
+
+
+def slugify(name):
+    return re.sub(r"[^a-z0-9]+", "-", name.lower().replace("++", "pp").replace("#", "sharp")).strip("-")
 
 
 def tools():
-    pad, label_w, cell = 36, 230, 82
-    row_h = 112
-    h = 130 + len(TOOLS) * row_h + 24
-    s = Svg(W, h)
-    s.rect(0, 0, W, h, r=22, fill=WHITE)
-    s.text(pad, 66, "Tools I work with.", "outfit", 500, 30, INK, tracking=-0.03)
+    """One linked card per tool, plus a header and a label card per group.
+
+    GitHub doesn't keep links inside an SVG, so every tool is its own image
+    and the README block between the tools markers is regenerated here."""
     total = sum(len(t) for _, t in TOOLS)
-    s.add(f'<circle cx="{pad + 3}" cy="{92}" r="3" fill="{ORANGE}"/>')
-    s.text(pad + 14, 96, f"{total} tools · languages, ML, data, cloud and DevOps", "mono", 400, 11, GREY)
-    y = 124
+    s = Svg(W, 104)
+    s.rect(0.5, 0.5, W - 1, 103, r=18, fill=WHITE, stroke=LINE)
+    s.text(28, 50, "Tools I work with.", "outfit", 500, 30, INK, tracking=-0.03)
+    s.add(f'<circle cx="31" cy="74" r="3" fill="{ORANGE}"/>')
+    s.text(42, 78, f"{total} tools · click any of them to visit its site", "mono", 400, 11, GREY)
+    save(s, "tools/header.svg", "Tools I work with.")
+
+    md = ['<img src="assets/tools/header.svg" width="100%" alt="Tools I work with." />', ""]
     for i, (group, items) in enumerate(TOOLS):
-        s.rect(pad, y, W - 2 * pad, 1, fill=LINE)
-        s.text(pad, y + 36, f"0{i + 1}", "mono", 500, 12, ORANGE)
-        s.text(pad + 40, y + 40, group, "outfit", 300, 23, INK, tracking=-0.01)
-        for j, (name, spec) in enumerate(items):
-            cx = pad + label_w + j * cell
-            logo_tile(s, cx + (cell - 56) / 2, y + 16, spec)
-            s.text(cx + cell / 2, y + 90, name, "manrope", 500, 10.5, GREY, anchor="middle")
-        y += row_h
-    s.rect(pad, y, W - 2 * pad, 1, fill=LINE)
-    save(s, "tools.svg", "Tools I work with: " + ", ".join(n for _, t in TOOLS for n, _ in t) + ".")
+        s = Svg(LABEL_W, TILE_H)
+        s.rect(0.5, 0.5, LABEL_W - 1, TILE_H - 1, r=14, fill=BG, stroke=LINE)
+        s.text(16, 30, f"0{i + 1}", "mono", 500, 12, ORANGE)
+        s.text(16, 66, group, "outfit", 300, 20 if len(group) < 11 else 17, INK, tracking=-0.01)
+        gslug = slugify(group)
+        save(s, f"tools/group-{gslug}.svg", group)
+        row = [f'<img src="assets/tools/group-{gslug}.svg" width="{LABEL_W}" alt="{escape(group)}" />']
+        for name, spec, url in items:
+            s = Svg(TILE_W, TILE_H)
+            s.rect(0.5, 0.5, TILE_W - 1, TILE_H - 1, r=14, fill=WHITE, stroke=LINE)
+            draw_logo(s, TILE_W / 2, 38, spec)
+            s.text(TILE_W / 2, 78, name, "manrope", 500, 10.5 if len(name) < 13 else 9.5, GREY, anchor="middle")
+            tslug = slugify(name)
+            save(s, f"tools/{tslug}.svg", name)
+            row.append(f'<a href="{url}"><img src="assets/tools/{tslug}.svg" width="{TILE_W}" alt="{escape(name)}" /></a>')
+        md += ["<p>", *("  " + r for r in row), "</p>", ""]
+
+    readme = ROOT / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    start, end = "<!-- tools:start -->", "<!-- tools:end -->"
+    block = start + "\n" + "\n".join(md).rstrip() + "\n" + end
+    readme.write_text(re.sub(re.escape(start) + ".*?" + re.escape(end), lambda _: block, text, flags=re.S),
+                      encoding="utf-8")
 
 
 PROJECTS = [
