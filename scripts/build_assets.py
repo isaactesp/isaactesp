@@ -331,7 +331,7 @@ def tools():
     s.rect(0.5, 0.5, W - 1, 103, r=18, fill=WHITE, stroke=LINE)
     s.text(28, 50, "Tools I work with.", "outfit", 500, 30, INK, tracking=-0.03)
     s.add(f'<circle cx="31" cy="74" r="3" fill="{ORANGE}"/>')
-    s.text(42, 78, f"{total} tools · click any of them to visit its site", "mono", 400, 11, GREY)
+    s.text(42, 78, f"{total} tools", "mono", 400, 11, GREY)
     save(s, "tools/header.svg", "Tools I work with.")
 
     md = ['<img src="assets/tools/header.svg" width="100%" alt="Tools I work with." />', ""]
